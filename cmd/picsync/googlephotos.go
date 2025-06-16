@@ -10,6 +10,7 @@ import (
 	"github.com/andrewjjenkins/picsync/pkg/googlephotos"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
+	oauthgoogle "golang.org/x/oauth2/google"
 )
 
 var (
@@ -28,6 +29,12 @@ var (
 		Use:   "list [<albumId>]",
 		Short: "List All albums, or the photos in a particular album (by id)",
 		Run:   runGooglephotosList,
+	}
+
+	googlephotosPicker = &cobra.Command{
+		Use:   "picker",
+		Short: "Run the Google Photos Picker flow",
+		Run:   runGooglephotosPicker,
 	}
 
 	listShared = false
@@ -59,6 +66,7 @@ func init() {
 	)
 
 	googlephotosCmd.AddCommand(googlephotosList)
+	googlephotosCmd.AddCommand(googlephotosPicker)
 
 	rootCmd.AddCommand(googlephotosCmd)
 }
@@ -219,5 +227,60 @@ func runGooglephotosListUpdateCache(client googlephotos.Client, albumId string) 
 			panic(err)
 		}
 		nextPageToken = res.NextPageToken
+	}
+}
+
+func runGooglephotosPicker(cmd *cobra.Command, args []string) {
+	consumerKey := viper.GetString("googlephotos.api.key")
+	if consumerKey == "" {
+		panic("must provide a Google Photos API key")
+	}
+	consumerSecret := viper.GetString("googlephotos.api.secret")
+	if consumerSecret == "" {
+		panic("must provide a Google Photos API secret")
+	}
+
+	access := oauth2.Token{
+		TokenType:    viper.GetString("googlephotos.access.token_type"),
+		AccessToken:  viper.GetString("googlephotos.access.access_token"),
+		RefreshToken: viper.GetString("googlephotos.access.refresh_token"),
+	}
+	expiryString := viper.GetString("googlephotos.access.expiry")
+	if expiryString != "" {
+		t, err := time.Parse(time.RFC3339, expiryString)
+		if err == nil {
+			access.Expiry = t
+		}
+	}
+
+	config := &oauth2.Config{
+		ClientID:     consumerKey,
+		ClientSecret: consumerSecret,
+		Scopes: []string{
+			"https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata",
+			"https://www.googleapis.com/auth/photospicker.mediaitems.readonly",
+		},
+		Endpoint: oauthgoogle.Endpoint,
+	}
+
+	client := oauth2.NewClient(context.Background(), config.TokenSource(context.Background(), &access))
+
+	sess, err := googlephotos.CreatePickingSession(client)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Open this link to pick photos:\n%s\n", sess.PickerURI)
+
+	err = googlephotos.WaitForPicking(client, sess.ID, sess.PollingConfig)
+	if err != nil {
+		panic(err)
+	}
+
+	items, err := googlephotos.ListPickedMediaItems(client, sess.ID)
+	if err != nil {
+		panic(err)
+	}
+	for _, item := range items {
+		fmt.Printf("Picked %s (%s)\n", item.Filename, item.BaseURL)
 	}
 }

@@ -19,7 +19,8 @@ func newOauth2Config(consumerKey string, consumerSecret string, redirectUrl stri
 		ClientSecret: consumerSecret,
 		RedirectURL:  redirectUrl,
 		Scopes: []string{
-			"https://www.googleapis.com/auth/photoslibrary.readonly",
+			"https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata",
+			"https://www.googleapis.com/auth/photospicker.mediaitems.readonly",
 		},
 		Endpoint: google.Endpoint,
 	}
