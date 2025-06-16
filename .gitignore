@@ -5,3 +5,5 @@ picsync-metadata-cache.db
 .envrc
 __debug_bin
 /picsync
+.vscode/
+/picsync.exe
