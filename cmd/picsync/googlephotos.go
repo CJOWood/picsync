@@ -37,6 +37,14 @@ var (
 		Run:   runGooglephotosPicker,
 	}
 
+	googlephotosLoginServer = &cobra.Command{
+		Use:   "loginserver",
+		Short: "Run a small web server to handle OAuth login",
+		RunE:  runGooglephotosLoginServer,
+	}
+
+	loginListen string
+
 	listShared = false
 )
 
@@ -50,6 +58,14 @@ func init() {
 	)
 
 	googlephotosCmd.AddCommand(googlephotosLogin)
+	googlephotosLoginServer.PersistentFlags().StringVarP(
+		&loginListen,
+		"listen",
+		"l",
+		":8484",
+		"Address to listen on for web login",
+	)
+	googlephotosCmd.AddCommand(googlephotosLoginServer)
 
 	googlephotosList.PersistentFlags().BoolVar(
 		&updateCache,
@@ -108,6 +124,18 @@ func runGooglephotosLogin(cmd *cobra.Command, args []string) {
 		auth.Access.Expiry.Format(time.RFC3339),
 	)
 	writeLoginOut(toWrite)
+}
+
+func runGooglephotosLoginServer(cmd *cobra.Command, args []string) error {
+	consumerKey := viper.GetString("googlephotos.api.key")
+	if consumerKey == "" {
+		return fmt.Errorf("must provide a Google Photos API key")
+	}
+	consumerSecret := viper.GetString("googlephotos.api.secret")
+	if consumerSecret == "" {
+		return fmt.Errorf("must provide a Google Photos API secret")
+	}
+	return googlephotos.ServeLogin(consumerKey, consumerSecret, loginListen)
 }
 
 func newGooglePhotosClient(c cache.Cache) (googlephotos.Client, error) {

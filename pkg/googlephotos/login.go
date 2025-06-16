@@ -3,8 +3,10 @@ package googlephotos
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -58,7 +60,12 @@ func Login(consumerKey string, consumerSecret string) (*oauth2.Token, error) {
 
 	config := newOauth2Config(consumerKey, consumerSecret, codeCatcher.CatcherURL)
 
-	fmt.Printf("Follow this link to authorize:\n%s\n\n", config.AuthCodeURL(codeCatcher.State))
+	authURL := config.AuthCodeURL(
+		codeCatcher.State,
+		oauth2.AccessTypeOffline,
+		oauth2.ApprovalForce,
+	)
+	fmt.Printf("Follow this link to authorize:\n%s\n\n", authURL)
 	code := waitForCode(codeCatcher)
 	fmt.Printf("Successfully got one-time code from OAuth2 login, exchanging for tokens\n")
 	token, err := config.Exchange(context.TODO(), code, oauth2.AccessTypeOffline)
@@ -66,4 +73,53 @@ func Login(consumerKey string, consumerSecret string) (*oauth2.Token, error) {
 		return nil, err
 	}
 	return token, nil
+}
+
+// ServeLogin runs an HTTP server that guides the user through the OAuth2 login
+// flow. It listens on listenAddr and prints the resulting credentials to stdout
+// once authorization completes.
+func ServeLogin(consumerKey, consumerSecret, listenAddr string) error {
+	state := uuid.NewString()
+
+	mux := http.NewServeMux()
+
+	var cfg *oauth2.Config
+	srv := &http.Server{Addr: listenAddr, Handler: mux}
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		redirect := fmt.Sprintf("http://%s/callback", r.Host)
+		cfg = newOauth2Config(consumerKey, consumerSecret, redirect)
+		url := cfg.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
+		fmt.Fprintf(w, "<a href=%q>Login with Google</a>", url)
+	})
+
+	mux.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
+		if r.Form.Get("state") != state {
+			http.Error(w, "state mismatch", 400)
+			return
+		}
+		code := r.Form.Get("code")
+		token, err := cfg.Exchange(r.Context(), code)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		fmt.Fprintf(w, "Login complete. You can close this window.")
+		fmt.Printf("googlephotos.access.token_type: %s\n", token.TokenType)
+		fmt.Printf("googlephotos.access.access_token: %s\n", token.AccessToken)
+		fmt.Printf("googlephotos.access.refresh_token: %s\n", token.RefreshToken)
+		fmt.Printf("googlephotos.access.expiry: %s\n", token.Expiry.Format(time.RFC3339))
+		go func() {
+			// give browser time to read message
+			time.Sleep(2 * time.Second)
+			srv.Shutdown(context.Background())
+		}()
+	})
+
+	fmt.Printf("Open http://%s in your browser to authenticate\n", listenAddr)
+	return srv.ListenAndServe()
 }
