@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -78,7 +79,7 @@ func Login(consumerKey string, consumerSecret string) (*oauth2.Token, error) {
 // ServeLogin runs an HTTP server that guides the user through the OAuth2 login
 // flow. It listens on listenAddr and prints the resulting credentials to stdout
 // once authorization completes.
-func ServeLogin(consumerKey, consumerSecret, listenAddr string) error {
+func ServeLogin(consumerKey, consumerSecret, listenAddr, publicURL string) error {
 	state := uuid.NewString()
 
 	mux := http.NewServeMux()
@@ -86,9 +87,16 @@ func ServeLogin(consumerKey, consumerSecret, listenAddr string) error {
 	var cfg *oauth2.Config
 	srv := &http.Server{Addr: listenAddr, Handler: mux}
 
+	redirectBase := publicURL
+	if redirectBase == "" {
+		redirectBase = fmt.Sprintf("http://%s", listenAddr)
+	}
+
+	redirectURL := fmt.Sprintf("%s/callback", strings.TrimRight(redirectBase, "/"))
+
+	cfg = newOauth2Config(consumerKey, consumerSecret, redirectURL)
+
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		redirect := fmt.Sprintf("http://%s/callback", r.Host)
-		cfg = newOauth2Config(consumerKey, consumerSecret, redirect)
 		url := cfg.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.ApprovalForce)
 		fmt.Fprintf(w, "<a href=%q>Login with Google</a>", url)
 	})
