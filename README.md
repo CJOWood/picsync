@@ -131,9 +131,7 @@ application can access your selected photos. Once authorization completes,
 the app prints the values to add to `.picsync-credentials.yaml` (use the
 `-o` option to write them directly). Alternatively you can start a small web
 server with `picsync googlephotos loginserver` and perform the OAuth flow in a
-browser on another machine. When using Google "Web Application" OAuth
-credentials, provide the externally accessible URL with `--public-url` so the
-redirect matches the value configured in the Google console.
+browser on another machine.
 
 You should add a block to this with your username/password for Nixplay.
 
