@@ -43,8 +43,7 @@ var (
 		RunE:  runGooglephotosLoginServer,
 	}
 
-	loginListen    string
-	loginPublicURL string
+	loginListen string
 
 	listShared = false
 )
@@ -65,12 +64,6 @@ func init() {
 		"l",
 		":8484",
 		"Address to listen on for web login",
-	)
-	googlephotosLoginServer.PersistentFlags().StringVar(
-		&loginPublicURL,
-		"public-url",
-		"",
-		"External URL for OAuth redirect (required for Web Application flow)",
 	)
 	googlephotosCmd.AddCommand(googlephotosLoginServer)
 
@@ -142,7 +135,7 @@ func runGooglephotosLoginServer(cmd *cobra.Command, args []string) error {
 	if consumerSecret == "" {
 		return fmt.Errorf("must provide a Google Photos API secret")
 	}
-	return googlephotos.ServeLogin(consumerKey, consumerSecret, loginListen, loginPublicURL)
+	return googlephotos.ServeLogin(consumerKey, consumerSecret, loginListen)
 }
 
 func newGooglePhotosClient(c cache.Cache) (googlephotos.Client, error) {
