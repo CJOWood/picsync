@@ -60,8 +60,8 @@ googlephotos:
 ```
 
 When you complete `picsync googlephotos login` later, you will get a warning
-about an unapproved app named Picsync (or whatever you chose) wanting read-only
-access to google photos data.  Check that it is the same as the Name you chose
+about an unapproved app named Picsync (or whatever you chose) wanting access to
+the Google Photos Picker. Check that it is the same as the Name you chose
 above.
 
 Setup
@@ -337,8 +337,9 @@ Comparison to Nixplay Built-In
 At the time this project was started, Nixplay didn't have functionality to pull 
 from SmugMug or Google Photos.  There is now a built-in Google Photos integration.
 
-However, it wants access to all your google photos data, and I wanted to limit its 
-scope to read-only, and ideally read-only of just particular albums for security.  
+However, it wants access to all your google photos data, and I wanted to limit its
+scope to just the photos you pick. The new Google Photos Picker API allows this
+by granting read-only access only to selected media items.
 As well, you can see clearly that picsync is doing nothing nefarious with any of
 the photo data (just really simple reads from Google Photos), and all the
 credentials stay on your system.

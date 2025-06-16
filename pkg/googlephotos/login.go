@@ -19,8 +19,10 @@ func newOauth2Config(consumerKey string, consumerSecret string, redirectUrl stri
 		ClientSecret: consumerSecret,
 		RedirectURL:  redirectUrl,
 		Scopes: []string{
-			"https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata",
+			// Picker API scope to let the user select media items
 			"https://www.googleapis.com/auth/photospicker.mediaitems.readonly",
+			// Library API scope to fetch the selected media items
+			"https://www.googleapis.com/auth/photoslibrary.readonly.appcreateddata",
 		},
 		Endpoint: google.Endpoint,
 	}
