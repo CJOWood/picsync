@@ -129,7 +129,9 @@ browser (often on another device when running in Docker). Authorize Picsync
 when prompted. The flow now requests the Picker API scopes so that the
 application can access your selected photos. Once authorization completes,
 the app prints the values to add to `.picsync-credentials.yaml` (use the
-`-o` option to write them directly).
+`-o` option to write them directly). Alternatively you can start a small web
+server with `picsync googlephotos loginserver` and perform the OAuth flow in a
+browser on another machine.
 
 You should add a block to this with your username/password for Nixplay.
 
