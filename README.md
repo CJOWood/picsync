@@ -60,8 +60,8 @@ googlephotos:
 ```
 
 When you complete `picsync googlephotos login` later, you will get a warning
-about an unapproved app named Picsync (or whatever you chose) wanting read-only
-access to google photos data.  Check that it is the same as the Name you chose
+about an unapproved app named Picsync (or whatever you chose) wanting access to
+the Google Photos Picker. Check that it is the same as the Name you chose
 above.
 
 Setup
@@ -126,8 +126,8 @@ pprof:
 The easiest way to create the .picsync-credentials.yaml file is to run
 `picsync googlephotos login`.  This will give you a URL you should open in
 a browser where you're signed in to google, and ask you to authorize the
-Picsync app to *read-only* access to your Google Photos data.  Once you
-authorize it, the app will print out what you should put into the .picsync-credentials.yaml file.  (You can avoid printing the details to the 
+Picsync app to read photos you select using the Google Photos Picker.  Once you
+authorize it, the app will print out what you should put into the .picsync-credentials.yaml file.  (You can avoid printing the details to the
 console using `picsync googlephotos login -o .picsync-credentials.yaml`).
 
 You should add a block to this with your username/password for Nixplay.
@@ -331,8 +331,9 @@ Comparison to Nixplay Built-In
 At the time this project was started, Nixplay didn't have functionality to pull 
 from SmugMug or Google Photos.  There is now a built-in Google Photos integration.
 
-However, it wants access to all your google photos data, and I wanted to limit its 
-scope to read-only, and ideally read-only of just particular albums for security.  
+However, it wants access to all your google photos data, and I wanted to limit its
+scope to just the photos you pick. The new Google Photos Picker API allows this
+by granting read-only access only to selected media items.
 As well, you can see clearly that picsync is doing nothing nefarious with any of
 the photo data (just really simple reads from Google Photos), and all the
 credentials stay on your system.
