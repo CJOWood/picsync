@@ -124,11 +124,12 @@ pprof:
 ```
 
 The easiest way to create the .picsync-credentials.yaml file is to run
-`picsync googlephotos login`.  This will give you a URL you should open in
-a browser where you're signed in to google, and ask you to authorize the
-Picsync app to *read-only* access to your Google Photos data.  Once you
-authorize it, the app will print out what you should put into the .picsync-credentials.yaml file.  (You can avoid printing the details to the 
-console using `picsync googlephotos login -o .picsync-credentials.yaml`).
+`picsync googlephotos login`. This prints a URL that you can copy into a
+browser (often on another device when running in Docker). Authorize Picsync
+when prompted. The flow now requests the Picker API scopes so that the
+application can access your selected photos. Once authorization completes,
+the app prints the values to add to `.picsync-credentials.yaml` (use the
+`-o` option to write them directly).
 
 You should add a block to this with your username/password for Nixplay.
 
@@ -148,6 +149,11 @@ googlephotos:
     refresh_token: "..."
     expiry: "2022-09-21..."
 ```
+
+You can also use the new Picker API by running `picsync googlephotos picker`.
+This creates a short-lived session and prints a link that you open in a browser
+to choose photos or videos. Picsync polls the session using the recommended
+intervals and then lists the items you selected.
 
 Listing
 -------
